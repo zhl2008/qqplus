@@ -1,0 +1,21 @@
+langrensha
+
+表名为当前进行游戏的
+qq群号码_personal 存放个人qq号，昵称，是否存活，是否为警长
+qq群号码_public   存放下一位发言者编号，发言次序
+qq群号码_role	  存放当前的角色名称（狼和普通村民会加上编号加以区分）
+
+create database langrensha;
+use langrensha;
+create table 11111111_personal(uid int(4) not null AUTO_INCREMENT PRIMARY KEY,
+			       			   qq int(10) not null,
+                               nickname varchar(40) not null,
+							   is_alive bool default 1 not null,
+							   is_police bool default 0 not null)
+create table 11111111_public(next_speaker int(10) not null,
+			                 speak_order bool default 1 not null)
+create table 11111111_role(role varchar(40) not null,
+						   is_alive bool fefault 1 not null,
+			               has_save bool default 1 not null,
+			               has_poison bool default 1 not null);
+												

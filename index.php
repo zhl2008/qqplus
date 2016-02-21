@@ -5,7 +5,7 @@ $command_array=['start','alive','stop','addtime','prepare','end_game','query_rol
 $config_array=[['巫神','预言家','猎神','白神','村民1','村民2','村民3','村民4','狼','狼','狼','狼'],//12
 ['巫神','预言家','猎神','守护神','村民1','村民2','村民3','村民4','狼','狼','狼'],//11
 ['巫神','预言家','猎神','白神','村民1','村民2','村民3','狼','狼','狼'], //10
-['巫神','预言家','猎神','狼1','狼2','狼3'],//6
+['巫神','预言家','猎神','狼','狼','狼'],//6
 ];
 $game_array=['天黑请闭眼','天亮了','下面开始警长竞选','投票放逐','狼人猎杀','女巫解药','女巫毒药','守护神请选择守护目标','预言家验人'];
 $game_func=['night_time','day_time','vote_for_police','vote_for_out','wolf_kill','witch_save','witch_kill','protect_protect','check_role'];
@@ -202,19 +202,24 @@ function night_time(){
 		$GLOBALS["variables"]["is_first_night"]="0";
 		store();
 	}
-		//守护神睁眼
+		//狼人睁眼
+		query_player("4","狼");
 		if(in_array("守护神",$GLOBALS["variables"]["roles"]) ){
-			$GLOBALS["variables"]["next_function"]="7";
-			store();
-			send_result(query_qq_by_role("守护神"),$GLOBALS["game_array"][$GLOBALS["variables"]["next_function"]],"SendMessage");
+		query_player("7","守护神");			
 		}else{
-			//如果没有守护神，狼人睁眼
-			$GLOBALS["variables"]["next_function"]="4";
-			send_result(query_qq_by_role("狼"),$GLOBALS["game_array"][$GLOBALS["variables"]["next_function"]],"SendMessage");
+			//如果没有守护神，女巫救人
+			query_player("5","女巫");			
 		}
 	
 }
 
+function query_player($func_num,$role){
+	$GLOBALS["variables"]["next_function"]=$func_num;
+	store();
+	send_result(query_qq_by_role($role),$GLOBALS["game_array"][$GLOBALS["variables"]["next_function"]],"SendMessage");
+}
+
+function 
 //消息的处理
 
 if($_POST['Event']=="ReceiveNormalIM"||$_POST['Event']=="ReceiveClusterIM"){
