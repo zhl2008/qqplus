@@ -8,8 +8,12 @@ $db_database="langrensha";////如果第一次玩，请先建立langrensha这个�
 $command_array=["start","send_result","err_log","execute_sql","end_game","query_user_by_qq","err_log"];
 $game_array=[];
 
-//2/23 select last_insert_id 有问题，导致mid不正确，建议重写execute_sql函数
+/*2/23 select last_insert_id 有问题，导致mid不正确，建议重写execute_sql函数(已解决：last_insert_id的获取必须在conn没有被释放的时候进行,
+因为mysql面向对象连接获取id时并没有直接可以使用的函数，所以改用面向过程连接，面向过程连接是遇到的两个问题：1.mysql——connetc中db port加在哪？
+2.需要加mysql——select——db来选择数据库；此外，err——log函数也可以正常报错了)
 
+
+*/
 function init_tables($game_name){
 	$sql="create table ".$game_name."_personal(uid int(4) not null AUTO_INCREMENT PRIMARY KEY,
 			       			qq int(10) not null,
@@ -17,12 +21,12 @@ function init_tables($game_name){
 							is_alive bool default 1 not null,
 							is_police bool default 0 not null);
 	create table ".$game_name."_public(next_speaker int(10) not null,
-			                speak_order bool default 1 not null,
-			                message_number int(5) default 0 not null);
+			                speak_order bool default 1 not null);
 	create table ".$game_name."_role (role varchar(40) not null,
 						    is_alive bool default 1 not null,
 			                has_save bool default 1 not null,
-			                has_poison bool default 1 not null);
+			                has_poison bool default 1 not null,
+			                last_save_people int(4) default 0 not null);
 	create table ".$game_name."_message(mid int(5) not null AUTO_INCREMENT PRIMARY KEY,
 							is_qq_group bool not null,
 							qq int(10) not null,
@@ -39,7 +43,7 @@ function init_tables($game_name){
 }
 
 function drop_tabels($game_name){
-	$sql="drop table ".$game_name."_personal;drop table ".$game_name."_public;drop table ".$game_name."_role;drop table ".$game_name."_message";
+	$sql="drop table ".$game_name."_personal;drop table ".$game_name."_public;drop table ".$game_name."_role;drop table ".$game_name."_message;";
 	$sqls=explode(";",$sql);
 	foreach ($sqls as $sql) {
 		execute_sql($sql,0);
@@ -61,7 +65,7 @@ function start(){
 }
 
 function err_log($msg){
-	file_put_contents("error.log",date('y-m-d h:i:s',time())." : ".$msg, FILE_APPEND);
+	file_put_contents("error.log",date('y-m-d h:i:s',time())." : ".$msg."\r\n", FILE_APPEND);
 }
 
 function get_command($Message){
@@ -115,38 +119,31 @@ function do_command($Message){
 	}
 }
 
-function execute_sql($query,$is_output){   
-	$conn = new mysqli($GLOBALS["db_host"], $GLOBALS["db_user"], $GLOBALS["db_passwd"], $GLOBALS["db_database"], $GLOBALS["db_port"]);
+function execute_sql($query,$is_output_mid){   
+	$conn = mysql_connect($GLOBALS["db_host"], $GLOBALS["db_user"], $GLOBALS["db_passwd"], $GLOBALS["db_database"]);
 	if(!$conn)
 	{
 		return -1;
 		err_log("数据库连接错误");
 	}
-	$result=$conn->query($query);
+	mysql_select_db($GLOBALS["db_database"],$conn);
+	//echo $query;
+	if(!$query){
+		return "";
+	}
+	$result=mysql_query($query,$conn);
 	$row=array();
-	if(is_object($result)){
-		$row=$result->fetch_row();
+	if(is_resource($result)){
+		$row=mysql_fetch_row($result);
 	}
-	if($is_output){
-			if(isset($result)){
-				echo "success!<br>";
-    			while($row){
-					$count=count($row);
-					for($i=0;$i<($count);$i++){
-						echo $row[$i];
-						echo " ";			
-					}
-				echo "<br>";
-				}
-			}else
-			{
-			err_log("返回为空");
-			}
+	if($is_output_mid){
+		$row=mysql_insert_id();
 	}
-	$conn->close();
-	if($error=mysql_error()){
-		err_log($error);
+	
+	if($error=mysql_error($conn)){
+		err_log($error." your query is :".$query);
 	}
+	mysql_close($conn);
 	return $row;
 }
 
@@ -184,13 +181,13 @@ function filter($str)
 
 //获取python处理消息后的返回
 function get_result($game_name,$mid){
-	$result=0;
-	echo $mid;
-	//while(!$result){
+	$result="";
+	//echo $mid;
+	while(!$result){
 		$result=execute_sql("select return_data from ".$game_name."_message where mid=".$mid.";",0)[0];
-		//sleep(0.5);
-	//}
-	echo $result;
+		sleep(0.5);
+	}
+	//echo $result;
 	//while(!$result=execute_sql("select return_data from ".$game_name."_message where mid=".$mid.";",0)[0]){
 		
 	//}
@@ -208,17 +205,16 @@ if($_POST['Event']=="ReceiveNormalIM"||$_POST['Event']=="ReceiveClusterIM"){
 		//私聊的消息处理
 		if($_POST['Event']=="ReceiveNormalIM"&&strlen($_POST['Message'])<=40&&$game_name=query_user_by_qq($_POST['QQ'])){
 			
-			execute_sql("insert into ".$game_name."_message (is_qq_group,qq,nickname,message) values (0,'".$_POST['QQ']."','".$_POST['NickName']."','".filter($_POST['Message'])."');",0);
+			$mid=execute_sql("insert into ".$game_name."_message (is_qq_group,qq,nickname,message) values (0,'".$_POST['QQ']."','".$_POST['NickName']."','".filter($_POST['Message'])."');",1);
 
 			
 		//群里消息处理
 		}else if($_POST['Event']=="ReceiveClusterIM"&&strlen($_POST['Message'])<=40){
 			$game_name=$_POST['ExternalId'];
 			//echo "insert into ".$game_name."_message (is_qq_group,qq,nickname,message) values (1,'".$_POST['QQ']."','".$_POST['Nick']."','".filter($_POST['Message'])."');";
-			execute_sql("insert into ".$game_name."_message (is_qq_group,qq,nickname,message) values (1,'".$_POST['QQ']."','".$_POST['Nick']."','".filter($_POST['Message'])."');",0);
+			$mid=execute_sql("insert into ".$game_name."_message (is_qq_group,qq,nickname,message) values (1,'".$_POST['QQ']."','".$_POST['Nick']."','".filter($_POST['Message'])."');",1);
 		}
 		//var_dump(execute_sql("select last_insert_id();",0));
-		$mid=execute_sql("select last_insert_id();",0)[0];
 		sleep(1);
 		$result=get_result($game_name,$mid);
 		
