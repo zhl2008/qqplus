@@ -16,21 +16,23 @@ $game_array=[];
 */
 function init_tables($game_name){
 	$sql="create table ".$game_name."_personal(uid int(4) not null AUTO_INCREMENT PRIMARY KEY,
-			       			qq int(10) not null,
+			       			qq varchar(10) not null,
                             nickname varchar(40) not null,
 							is_alive bool default 1 not null,
 							is_police bool default 0 not null);
-	create table ".$game_name."_public(next_speaker int(10) default 1 not null,
+	create table ".$game_name."_public(next_speaker varchar(10) default 1 not null,
 			                speak_order bool default 1 not null,
-			                python_pid int(5) default 0 not null);
+			                python_pid varchar(5) default 0 not null);
 	create table ".$game_name."_role (role varchar(40) not null,
+							qq varchar(10) not null,
 						    is_alive bool default 1 not null,
 			                has_save bool default 1 not null,
 			                has_poison bool default 1 not null,
 			                last_save_people int(4) default 0 not null);
 	create table ".$game_name."_message(mid int(5) not null AUTO_INCREMENT PRIMARY KEY,
 							is_qq_group bool not null,
-							qq int(10) not null,
+							qq_group varchar(10) default 0 not null,
+							qq varchar(10) not null,
 							nickname varchar(40) not null,
 							message varchar(40) not null,
 							return_data varchar(1000) not null);";
@@ -58,11 +60,7 @@ function start(){
 		drop_tabels($_POST['ExternalId']);
 		init_tables($_POST['ExternalId']);
 		execute_sql("insert into qq_group (qq_group,Robot_qq) values (".$_POST['ExternalId'].",".$_POST['RobotQQ'].");",0);
-		exec("python robots.py ".$_POST['ExternalId']);
-		
-		$pid=file_get_contents('pid');
-		execute_sql("insert into ".$_POST['ExternalId']."_public (python_pid) values ('".$pid."');",0);
-		
+		file_put_contents('tmp',$_POST['ExternalId']);
 	}
 }
 
@@ -199,7 +197,7 @@ function get_result($game_name,$mid){
 		sleep(0.5);
 	}
 	//如果返回时noreply说明不需要返回，这时返回为空字符串
-	if($result=="noreply"){
+	if(strpos("noreply",$result)){
 		return "";
 	}
 	return $result;
@@ -223,7 +221,7 @@ if($_POST['Event']=="ReceiveNormalIM"||$_POST['Event']=="ReceiveClusterIM"){
 		}else if($_POST['Event']=="ReceiveClusterIM"&&strlen($_POST['Message'])<=40){
 			$game_name=$_POST['ExternalId'];
 			//echo "insert into ".$game_name."_message (is_qq_group,qq,nickname,message) values (1,'".$_POST['QQ']."','".$_POST['Nick']."','".filter($_POST['Message'])."');";
-			$mid=execute_sql("insert into ".$game_name."_message (is_qq_group,qq,nickname,message) values (1,'".$_POST['QQ']."','".$_POST['Nick']."','".filter($_POST['Message'])."');",1);
+			$mid=execute_sql("insert into ".$game_name."_message (is_qq_group,qq,nickname,message,qq_group) values (1,'".$_POST['QQ']."','".$_POST['Nick']."','".filter($_POST['Message'])."','".$game_name."');",1);
 		}
 		//var_dump(execute_sql("select last_insert_id();",0));
 		sleep(1);
