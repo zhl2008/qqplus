@@ -39,6 +39,7 @@ create table 11111111_role(role varchar(40) not null,
 create table 11111111_message(mid int(5) not null AUTO_INCREMENT PRIMARY KEY,
 				is_qq_group bool not null,
 				qq int(10) not null,
+				qq_group int(10) not null,
 				nickname varchar(40) not null,
 				return_data varchar(1000) not null,
 				message varchar(100) not null);

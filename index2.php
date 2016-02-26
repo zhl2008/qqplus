@@ -5,7 +5,7 @@ $db_port="3306";
 $db_user="root";
 $db_passwd="";
 $db_database="langrensha";////如果第一次玩，请先建立langrensha这个数据库
-$command_array=["start","send_result","err_log","execute_sql","end_game","query_user_by_qq","err_log"];
+$command_array=["start","send_result","err_log","execute_sql","end_game","query_user_by_qq","end_game"];
 $game_array=[];
 
 /*2/23 select last_insert_id 有问题，导致mid不正确，建议重写execute_sql函数(已解决：last_insert_id的获取必须在conn没有被释放的时候进行,
@@ -20,8 +20,9 @@ function init_tables($game_name){
                             nickname varchar(40) not null,
 							is_alive bool default 1 not null,
 							is_police bool default 0 not null);
-	create table ".$game_name."_public(next_speaker int(10) not null,
-			                speak_order bool default 1 not null);
+	create table ".$game_name."_public(next_speaker int(10) default 1 not null,
+			                speak_order bool default 1 not null,
+			                python_pid int(5) default 0 not null);
 	create table ".$game_name."_role (role varchar(40) not null,
 						    is_alive bool default 1 not null,
 			                has_save bool default 1 not null,
@@ -56,11 +57,21 @@ function start(){
 		send_result($_POST['ExternalId'],"狼人杀游戏开始！正在启动脚本，请玩家回复join加入！","SendClusterMessage");
 		drop_tabels($_POST['ExternalId']);
 		init_tables($_POST['ExternalId']);
-		execute_sql("insert into qq_group (qq_group,Robot_qq) values (".$_POST['ExternalId'].",".$_POST['RobotQQ'].")",0);
-		exec("python robots.py ".$_POST['ExternalId'],$output,$a);
-		if(!$a){
-			err_log($output);
-		}
+		execute_sql("insert into qq_group (qq_group,Robot_qq) values (".$_POST['ExternalId'].",".$_POST['RobotQQ'].");",0);
+		exec("python robots.py ".$_POST['ExternalId']);
+		
+		$pid=file_get_contents('pid');
+		execute_sql("insert into ".$_POST['ExternalId']."_public (python_pid) values ('".$pid."');",0);
+		
+	}
+}
+
+function end_game(){
+	if($_POST['Event']=="ReceiveClusterIM"){
+		send_result($_POST['ExternalId'],"狼人杀游戏结束!","SendClusterMessage");
+		drop_tabels($_POST['ExternalId']);
+		$pid=execute_sql("select python_pid from ".$_POST['ExternalId']."_public;");
+		exec("taskkill /PID ".$pid);
 	}
 }
 
@@ -187,10 +198,10 @@ function get_result($game_name,$mid){
 		$result=execute_sql("select return_data from ".$game_name."_message where mid=".$mid.";",0)[0];
 		sleep(0.5);
 	}
-	//echo $result;
-	//while(!$result=execute_sql("select return_data from ".$game_name."_message where mid=".$mid.";",0)[0]){
-		
-	//}
+	//如果返回时noreply说明不需要返回，这时返回为空字符串
+	if($result=="noreply"){
+		return "";
+	}
 	return $result;
 }
 

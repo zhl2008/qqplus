@@ -1,2 +1,41 @@
 16-02-25 08:34:04 : Unknown table 'langrensha.426699390_personal' your query is :drop table 426699390_personal
 16-02-25 08:34:05 : Unknown table 'langrensha.426699390_message' your query is :drop table 426699390_message
+2016-02-26 00:10:34 : haozigege test
+2016-02-26 00:11:49 : haozigege test
+2016-02-26 00:18:29 : haozigege test
+2016-02-26 00:18:57 : haozigege test
+2016-02-26 09:45:27 : haozigege test
+2016-02-26 09:49:35 : haozigege test
+2016-02-26 09:50:52 : haozigege test
+2016-02-26 09:51:09 : haozigege test
+2016-02-26 09:52:39 : haozigege test
+2016-02-26 09:56:14 : haozigege test
+2016-02-26 09:56:48 : haozigege test
+2016-02-26 09:57:10 : haozigege test
+2016-02-26 09:59:51 : haozigege test
+2016-02-26 10:00:08 : haozigege test
+2016-02-26 10:00:26 : haozigege test
+2016-02-26 10:00:43 : haozigege test
+2016-02-26 10:01:15 : haozigege test
+2016-02-26 10:03:52 : haozigege test
+2016-02-26 10:04:31 : haozigege test
+2016-02-26 10:05:02 : haozigege test
+2016-02-26 10:05:41 : haozigege test
+2016-02-26 10:06:40 : haozigege test
+2016-02-26 10:10:17 : haozigege test
+2016-02-26 10:12:25 : haozigege test
+2016-02-26 10:13:15 : haozigege test
+16-02-26 02:13:59 : Table 'langrensha.into426699390_public' doesn't exist your query is :insert into426699390_public (python_pid) values ('');
+16-02-26 02:15:00 : Table 'langrensha.into426699390_public' doesn't exist your query is :insert into426699390_public (python_pid) values ('');
+16-02-26 02:15:50 : Table 'langrensha.into426699390_public' doesn't exist your query is :insert into426699390_public (python_pid) values ('');
+2016-02-26 10:16:39 : haozigege test
+2016-02-26 10:19:37 : haozigege test
+16-02-26 02:19:53 : Unknown table 'langrensha.4266993901_personal' your query is :drop table 4266993901_personal
+16-02-26 02:19:54 : Unknown table 'langrensha.4266993901_public' your query is :drop table 4266993901_public
+16-02-26 02:19:54 : Unknown table 'langrensha.4266993901_role' your query is :drop table 4266993901_role
+16-02-26 02:19:54 : Unknown table 'langrensha.4266993901_message' your query is :drop table 4266993901_message
+2016-02-26 10:19:56 : haozigege test
+16-02-26 02:19:56 : get error when run the python script
+2016-02-26 10:20:40 : haozigege test
+2016-02-26 10:20:51 : haozigege test
+2016-02-26 10:23:00 : haozigege test
