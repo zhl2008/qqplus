@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 host="127.0.0.1"
 port=3306
+key="haozigege"
 listen_port=8080
 db="langrensha"
 user="root"

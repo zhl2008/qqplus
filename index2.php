@@ -22,7 +22,10 @@ function init_tables($game_name){
 							is_police bool default 0 not null);
 	create table ".$game_name."_public(next_speaker varchar(10) default 1 not null,
 			                speak_order bool default 1 not null,
+			                wolf_kill int(4) default 0 not null,
+			                last_protect int(4) default 0 not null
 			                python_pid varchar(5) default 0 not null);
+	insert into ".$game_name."_pulic (python_pid) values ('0');
 	create table ".$game_name."_role (role varchar(40) not null,
 							qq varchar(10) not null,
 						    is_alive bool default 1 not null,
@@ -226,6 +229,9 @@ if($_POST['Event']=="ReceiveNormalIM"||$_POST['Event']=="ReceiveClusterIM"){
 		//var_dump(execute_sql("select last_insert_id();",0));
 		sleep(1);
 		$result=get_result($game_name,$mid);
+		if($command=get_command($result)){
+			$result=do_command($command)
+		}
 		
 	}
 	//在python中会对消息格式进行规范化，直接输出即可

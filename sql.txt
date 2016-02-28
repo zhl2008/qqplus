@@ -11,15 +11,16 @@ user 存放用户基本信息（nickname，qq,qq_group）
 group 存放当前群组  （gid,qq_group,Robot_qq)
 
 //第一次时建立数据库
+drop database langrensha;
 create database langrensha;
 use langrensha;
-create table user (qq int(10) not null,
+create table user (qq varchar(10) not null,
 		nickname varchar(40) not null,
-		qq_group int(10) not null);
+		qq_group varchar(10) not null);
 
 create table qq_group(gid int(4) not null AUTO_INCREMENT PRIMARY KEY,
-		    qq_group int(10) not null,
-			Robot_qq int(10) not null);
+		    qq_group varchar(10) not null,
+			Robot_qq varchar(10) not null);
 //
 
 
@@ -29,10 +30,12 @@ create table 11111111_personal(uid int(4) not null AUTO_INCREMENT PRIMARY KEY,
 							   is_alive bool default 1 not null,
 							   is_police bool default 0 not null)
 create table 11111111_public(next_speaker int(10) not null,
-			                 speak_order bool default 1 not null
-					message_number int(5) default 0 not null)
+			                 speak_order bool default 1 not null,
+					wolf_kill int(4) default 0 not null,
+					last_protect int(4) default 0 not null)
 create table 11111111_role(role varchar(40) not null,
-						   is_alive bool default 1 not null,
+					qq varchar(10) not null,
+				     is_alive bool default 1 not null,
 			               has_save bool default 1 not null,
 			               has_poison bool default 1 not null);
 
@@ -48,4 +51,4 @@ create table 11111111_message(mid int(5) not null AUTO_INCREMENT PRIMARY KEY,
 
 //test
 
-update 542858122_message set return_data="haozi" where mid=1; 												
+update 542858122_message set return_data="haozi" where mid=1; 								13121148443				
