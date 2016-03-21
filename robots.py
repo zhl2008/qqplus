@@ -63,11 +63,16 @@ class execute_sql():
         sql="select qq from %s_role where role='%s'"%(sys.argv[1],role)
         self.cursor.execute(sql)
 
+    def query_id_by_qq(self,qq):
+        sql="select uid from %s_personal where qq='%s'"%(sys.argv[1],qq)
+        self.cursor.execute(sql)
+
+
     def query_nickname_by_id(self,uid):
         sql="select nickname from %s_personal where uid=%d"%(sys.argv[1],uid)
         self.cursor.execute(sql)
 
-    def query_role_by_uid(self,uid):
+    def query_role_by_id(self,uid):
         sql="select role from %s_personal where uid=%d"%(sys.argv[1],uid)
         self.cursor.execute(sql)
     
@@ -120,7 +125,17 @@ class message():
             self.data=self.mysql.get_message(self.mid)
             time.sleep(0.5)
         self.mid+=1
+        #狼人自爆
+        if self.data[0][2]=="boom":
+            if self.data[0][0] and self.data[0][1] in self.role_is_alive_or_exist("wolf"):
+                uid=self.query_id_by_qq(self.data[0][1])
+                mysql.kill_player(uid)
+                self.write_return_data(sys.argv[1],"SendClusterMessage","wolf boomed himself ,then it will enter the night")
+                go_to_night()
+
+
         return self.data
+
     def serialize_data(self,qq,method,return_data):
         return '<&&>'+method+'<&>'+qq+'<&>'+return_data
         
@@ -133,7 +148,7 @@ class message():
         else:
             return 1
     def check_role(self,uid):
-        if self.mysql.query_role_by_uid(uid)[0][0]!="wolf":
+        if self.mysql.query_role_by_id(uid)[0][0]!="wolf":
             return "good"
         else:
             return "bad"
@@ -156,13 +171,18 @@ class message():
         if len(qqs)==0:
             return [0]
         return qqs
+
     def last_protect(self):
         uid=self.mysql.last_protect()[0][0]
         if uid:
             return "except player %d"%uid
         return ""
+
     def query_qq_by_id(self,uid):
         return self.mysql.query_qq_by_id()[0][0]
+
+    def query_id_by_qq(self,qq):
+        return self.mysql.query_id_by_qq(qq)[0][0]
 
 
 
@@ -303,6 +323,61 @@ class day():
 
     def during_day(self,a):
         if(self.is_first_day):
+            self.vote_for_police(a)
+
+
+    def vote_for_police(self,a):
+        a.send_return_data(sys.argv[1],"SendClusterMessage","send y to join the vote for police,you have 30s to decide")
+        [is_qq_group,qq,message,qq_group,nickname]=a.get_message()
+        now_time=time.time()
+        join_array=[0]*15
+        while (time.time()-now_time<30):
+            if is_qq_group and message=="y":
+                uid=a.query_id_by_qq(qq)
+                join_array[uid]=0
+                a.write_return_data(sys.argv[1],"SendClusterMessage","player %d %s join the vote!"%(uid,a.query_nickname_by_id(uid)))
+            a.write_return_data("","","noreply")  
+            [is_qq_group,qq,message,qq_group,nickname]=a.get_message()
+        a.write_return_data(protect,"SendMessage","vote is over")
+        return_data=""
+        for candidate in join_array:
+            return_data+="player %d;"%candidate
+        a.send_return_data(sys.argv[1],"SendClusterMessage",return_data+" send the number to give you vote,you have 30s to decide")
+        [is_qq_group,qq,message,qq_group,nickname]=a.get_message()
+        now_time=time.time()
+        return_data=""
+        has_voted_array=[]
+        while (time.time()-now_time<30):
+            uid=a.query_id_by_qq(qq)
+            if is_qq_group and message.isdigit() and uid not in has_voted_array:
+                if join_array[int(message)]:
+                    join_array[int(message)]+=1
+                    has_voted_array.append(uid)
+                    return_data+="player %d has voted to player %d\n"
+            a.write_return_data("","","noreply") 
+            [is_qq_group,qq,message,qq_group,nickname]=a.get_message()
+        a.write_return_data(sys.argv[1],"SendClusterMessage",return_data)
+        police=0
+        for i in range(join_array):
+            if join_array[i]>join_array[police]:
+                police=i
+        a.send_return_data(sys.argv[1],"SendClusterMessage","player %d is the police"%police)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             
 
 
@@ -321,7 +396,7 @@ def check_vote(vote_array):
     resonable_array=[]
     count_array=[0]*15
     for vote in vote_array:
-        if vote not in resonable_array):
+        if vote not in resonable_array:
             resonable_array.append(vote)
             count_array[int(vote)]=1
         else:
@@ -335,6 +410,11 @@ def check_vote(vote_array):
                 max=out
         return max
 
+def go_to_night():
+    global a,b,c
+     while 1:
+        b.start(a)
+        c.start(a)
 
    
 #准备游戏，先统计游戏人数
